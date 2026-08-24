@@ -2,33 +2,33 @@
 
 ## Finished
 
-- Added refreshable HubSpot and Google OAuth install/callback flows with state validation, encrypted token storage, and refresh coalescing.
-- Added Google Calendar free/busy filtering before assignment; connected-calendar errors fail closed and each decision records its availability source.
-- Added queued HubSpot writeback that resolves a representative by owner email and updates the contact owner by lead email.
-- Added a polished Connections workspace, setup-key protection, responsive states, provider tests, environment setup, and operator documentation.
-- Preserved idempotent routes so duplicate external IDs return the original decision before making a calendar call.
+- Provisioned dedicated Google and HubSpot OAuth clients; credentials remain only in the ignored local `.env`.
+- Connected Google Calendar successfully with identity/email and free/busy scopes; refreshable tokens are encrypted in PostgreSQL.
+- Added, validated, uploaded, built, and deployed a source-controlled HubSpot 2026.03 marketplace app with the three required scopes.
+- Scoped the HubSpot CLI key to developer-project uploads only and documented the provider app definition.
+- Rebuilt the local stack with both clients configured; the Connections workspace reports Google live and HubSpot ready.
 
 ## Try It
 
-Follow `README.md` to create `.env` and the two provider OAuth clients. Run `docker compose up --build`, open `http://localhost:3000`, then connect both accounts in **Connections**.
+Run `docker compose up -d`, open `http://localhost:3000`, and review **Connections**. Google should show the authorized account; HubSpot can complete after its policy acknowledgement.
 
 ## Checks
 
-- Formatting, lint, typecheck, and production build passed across all workspaces.
-- 8 router tests and 10 integration/OAuth tests passed.
-- PostgreSQL migration, seed, decision lookup, and integration smoke passed.
-- Rebuilt Docker stack passed health, idempotent route, durable worker, and saved-result checks.
-- Browser QA passed at 1440px and 390px with no overflow, warnings, or errors; the mobile route interaction passed.
+- `hs project validate`: passed.
+- HubSpot build #1 and automatic deploy #1: succeeded.
+- `docker compose up -d --build`: all images built; PostgreSQL healthy; web and worker started.
+- `GET /api/connections`: Google connected and both providers configured.
+- Formatting, lint, typecheck, 8 router tests, and 10 OAuth/integration tests passed.
 
 ## Decisions
 
-- Encrypt provider tokens with AES-256-GCM and keep the encryption key outside PostgreSQL.
-- Require Google free/busy once connected; never guess availability after a provider failure.
-- Keep HubSpot writeback asynchronous and retryable so routing does not wait on CRM latency.
+- Keep the HubSpot app definition in `integrations/hubspot` on platform 2026.03.
+- Use marketplace OAuth for eventual multi-account installation.
+- Grant the HubSpot CLI only `developer.projects.write`.
 
 ## Remaining
 
-- Create the HubSpot and Google OAuth clients, add the six uncommitted environment values, and authorize both accounts.
+- Explicitly accept HubSpot's acceptable-use policy, then rerun **Connect HubSpot** to finish the token exchange.
 - Replace seeded `.example` representative emails with real HubSpot owner and Google Calendar emails before live routing.
 - Add product user authentication before exposing the application publicly.
 - Add organization onboarding and rule/pool editing.
@@ -36,6 +36,6 @@ Follow `README.md` to create `.env` and the two provider OAuth clients. Run `doc
 
 ## Review First
 
-- `packages/integrations/src/google.ts` and `packages/integrations/src/hubspot.ts` for provider behavior.
-- `apps/web/app/api/connections` and `apps/web/app/api/route/route.ts` for OAuth and routing flow.
-- `apps/web/components/dashboard-client.tsx` for the operator experience.
+- `integrations/hubspot/src/app/app-hsmeta.json`
+- `packages/integrations/src/google.ts` and `packages/integrations/src/hubspot.ts`
+- `apps/web/components/dashboard-client.tsx`

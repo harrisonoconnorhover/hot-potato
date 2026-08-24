@@ -31,3 +31,7 @@ Weekly schedules remain the local fallback when Google is not connected. Once it
 ## 2026-08-24 — Keep CRM writeback asynchronous
 
 The routing decision commits before the external HubSpot call. The worker refreshes the token, resolves the selected representative by HubSpot owner email, and patches the contact by lead email. Retries remain visible in the existing durable job record.
+
+## 2026-08-24 — Version the HubSpot app with the product
+
+The HubSpot OAuth app uses the current 2026.03 developer platform and lives in `integrations/hubspot`. It is configured for marketplace distribution so the same source-controlled app can support additional customer accounts later. The HubSpot CLI key is intentionally limited to developer-project uploads; CRM access belongs only to the installed OAuth app.

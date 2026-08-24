@@ -40,9 +40,9 @@ Without provider credentials, the development CRM adapter completes queued jobs 
 
 ## Connect HubSpot and Google Calendar
 
-Copy `.env.example` to `.env`, generate the two local secrets shown in that file, and create one OAuth application with each provider.
+Copy `.env.example` to `.env` and generate the two local secrets shown in that file.
 
-For HubSpot, use this redirect URL:
+The current HubSpot developer-platform app definition is versioned in [`integrations/hubspot`](integrations/hubspot). Upload it with the HubSpot CLI, then place its client ID and secret in `.env`. It requests this redirect URL:
 
 ```text
 http://localhost:3000/api/connections/hubspot/callback
@@ -99,6 +99,7 @@ apps/worker    background job processor
 packages/router pure routing domain logic
 packages/db    schema, migrations, repository, seed data
 packages/integrations provider contracts and development adapters
+integrations/hubspot  source-controlled HubSpot OAuth app definition
 ```
 
 See [architecture](docs/architecture.md), [decisions](docs/decisions.md), and [contributing](CONTRIBUTING.md) for more detail.

@@ -1,0 +1,32 @@
+{
+  "uid": "hot_potato",
+  "type": "app",
+  "config": {
+    "description": "Open-source inbound lead routing with CRM ownership and rep availability built in.",
+    "name": "Hot Potato",
+    "distribution": "marketplace",
+    "auth": {
+      "type": "oauth",
+      "redirectUrls": [
+        "http://localhost:3000/api/connections/hubspot/callback"
+      ],
+      "requiredScopes": [
+        "oauth",
+        "crm.objects.contacts.write",
+        "crm.objects.owners.read"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": [],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "harrisonoconnorhoover@gmail.com",
+      "documentationUrl": "https://github.com/harrisonoconnorhover/hot-potato",
+      "supportUrl": "https://github.com/harrisonoconnorhover/hot-potato/issues"
+    }
+  }
+}
