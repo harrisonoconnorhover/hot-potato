@@ -5,6 +5,8 @@ export type RouteRequest = {
   externalId?: string;
   lead: Lead;
   now?: Date;
+  unavailableRepEmails?: string[];
+  availabilitySource?: "weekly_schedule" | "google_calendar";
 };
 
 export type RouteDecision = {
@@ -17,6 +19,33 @@ export type RouteDecision = {
   reason: "rule_match" | "owner_preserved";
   createdAt: string;
   writebackStatus: string;
+  availabilitySource: "weekly_schedule" | "google_calendar";
+};
+
+export type OAuthProvider = "hubspot" | "google";
+
+export type OAuthConnection = {
+  organizationSlug: string;
+  provider: OAuthProvider;
+  encryptedAccessToken: string;
+  encryptedRefreshToken: string;
+  expiresAt: Date;
+  scopes: string[];
+  externalAccountId: string | null;
+  externalAccountName: string | null;
+  metadata: Record<string, unknown>;
+  updatedAt: Date;
+};
+
+export type SaveOAuthConnection = Omit<OAuthConnection, "updatedAt">;
+
+export type ConnectionStatus = {
+  provider: OAuthProvider;
+  connected: boolean;
+  accountId: string | null;
+  accountName: string | null;
+  scopes: string[];
+  expiresAt: string | null;
 };
 
 export type Dashboard = {

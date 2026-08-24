@@ -1,24 +1,41 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { HotPotatoRepository, type Job } from "@hot-potato/db";
 import {
+  createConnectionTokenManager,
   DevelopmentCrmAdapter,
+  HubSpotCrmAdapter,
+  type ConnectionTokenManager,
   type CrmAdapter,
+  type CrmWritebackResult,
 } from "@hot-potato/integrations";
 
 const repository = new HotPotatoRepository();
 const pollMs = Number(process.env.WORKER_POLL_MS ?? 1_000);
 let stopping = false;
-const crmAdapters = new Map<string, CrmAdapter>([
-  ["development", new DevelopmentCrmAdapter()],
-]);
+let tokenManager: ConnectionTokenManager | undefined;
 
-async function handle(job: Job): Promise<void> {
+function manager(): ConnectionTokenManager {
+  return (tokenManager ??= createConnectionTokenManager(repository));
+}
+
+function crmAdapter(job: Job): CrmAdapter | undefined {
+  const adapter = String(job.payload.adapter ?? "development");
+  if (adapter === "development") return new DevelopmentCrmAdapter();
+  if (adapter === "hubspot") {
+    return new HubSpotCrmAdapter(() =>
+      manager().accessToken(String(job.payload.organizationSlug), "hubspot"),
+    );
+  }
+  return undefined;
+}
+
+async function handle(job: Job): Promise<CrmWritebackResult> {
   if (job.type !== "crm.owner.writeback") {
     throw new Error(`Unsupported job type: ${job.type}`);
   }
 
   const adapter = String(job.payload.adapter ?? "development");
-  const crm = crmAdapters.get(adapter);
+  const crm = crmAdapter(job);
   if (!crm) {
     throw new Error(`CRM adapter is not configured: ${adapter}`);
   }
@@ -39,6 +56,7 @@ async function handle(job: Job): Promise<void> {
       externalReference: result.externalReference,
     }),
   );
+  return result;
 }
 
 async function run(): Promise<void> {
@@ -51,8 +69,10 @@ async function run(): Promise<void> {
     }
 
     try {
-      await handle(job);
-      await repository.completeJob(job.id);
+      const result = await handle(job);
+      await repository.completeJob(job.id, {
+        externalReference: result.externalReference,
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(

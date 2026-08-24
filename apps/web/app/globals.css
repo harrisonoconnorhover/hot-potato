@@ -388,6 +388,7 @@ main {
   letter-spacing: -0.05em;
 }
 
+.connections-card,
 .router-card,
 .detail-card,
 .activity-card {
@@ -396,6 +397,135 @@ main {
   background: var(--paper);
   overflow: hidden;
   box-shadow: 5px 6px 0 rgba(24, 22, 19, 0.08);
+}
+.connections-card {
+  margin-bottom: 15px;
+}
+.connection-count {
+  padding: 7px 9px;
+  border: 1px solid #d3c7b8;
+  border-radius: 6px;
+  color: #5e574e;
+  font:
+    700 7px ui-monospace,
+    monospace;
+  letter-spacing: 0.06em;
+}
+.connection-notice {
+  padding: 11px 21px;
+  border-bottom: 1px solid #b9dec6;
+  background: #e4f4e8;
+  color: #285f3b;
+  font-size: 9px;
+  font-weight: 700;
+}
+.connection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.connection-card {
+  min-height: 245px;
+  padding: 23px;
+}
+.connection-card + .connection-card {
+  border-left: 1px solid var(--line);
+}
+.connection-title {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.connection-title h3 {
+  margin: 0;
+  font-size: 12px;
+}
+.connection-state {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: #92887b;
+  font:
+    600 6px ui-monospace,
+    monospace;
+  letter-spacing: 0.06em;
+}
+.connection-state i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #aaa094;
+}
+.connection-state.connected {
+  color: #277345;
+}
+.connection-state.connected i {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(116, 210, 154, 0.15);
+}
+.connection-card > p {
+  max-width: 420px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.6;
+}
+.connection-card form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+.connection-card form label {
+  margin: 0;
+}
+.connection-card form input {
+  height: 37px;
+  margin-top: 5px;
+}
+.connection-card form button {
+  height: 37px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--ink);
+  border-radius: 7px;
+  background: var(--ink);
+  color: #fff9ef;
+  font-size: 8px;
+  font-weight: 800;
+}
+.setup-required,
+.connected-account {
+  min-height: 50px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #f3eadf;
+}
+.setup-required span,
+.setup-required b,
+.connected-account span,
+.connected-account b {
+  display: block;
+}
+.setup-required span,
+.connected-account span {
+  color: #9a9084;
+  font:
+    600 6px ui-monospace,
+    monospace;
+  letter-spacing: 0.07em;
+}
+.setup-required b,
+.connected-account b {
+  margin-top: 5px;
+  font-size: 8px;
+}
+.connected-account {
+  border-color: #b9dec6;
+  background: #e4f4e8;
 }
 .card-heading {
   min-height: 82px;
@@ -1060,6 +1190,13 @@ footer a {
   .stat-grid {
     grid-template-columns: 1fr 1fr;
   }
+  .connection-grid {
+    grid-template-columns: 1fr;
+  }
+  .connection-card + .connection-card {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
   .router-grid {
     display: block;
   }
@@ -1102,6 +1239,12 @@ footer a {
   }
   .field-row {
     grid-template-columns: 1fr 100px;
+  }
+  .connection-card form {
+    grid-template-columns: 1fr;
+  }
+  .connection-card form button {
+    justify-content: space-between;
   }
   .card-heading p {
     max-width: 220px;

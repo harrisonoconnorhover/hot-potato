@@ -15,6 +15,10 @@ try {
   } as const;
   const decision = await repository.route(request);
   const repeated = await repository.route(request);
+  const found = await repository.decisionByExternalId(
+    request.organizationSlug,
+    request.externalId,
+  );
   const dashboard = await repository.dashboard("acme");
 
   if (!dashboard.decisions.some((item) => item.id === decision.id)) {
@@ -27,6 +31,9 @@ try {
   }
   if (decision.id !== repeated.id) {
     throw new Error("Repeated external ID created more than one decision.");
+  }
+  if (decision.id !== found?.id) {
+    throw new Error("Decision lookup did not return the idempotent result.");
   }
   console.log(
     `Integration smoke passed: ${decision.leadEmail} -> ${decision.repEmail}`,

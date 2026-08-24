@@ -10,6 +10,16 @@ type LeadForm = {
   owner: string;
 };
 
+type Connection = {
+  provider: "hubspot" | "google";
+  connected: boolean;
+  configured: boolean;
+  accountId: string | null;
+  accountName: string | null;
+  scopes: string[];
+  expiresAt: string | null;
+};
+
 const initialLead: LeadForm = {
   email: "maya@northstarlabs.example",
   employees: "820",
@@ -49,6 +59,8 @@ export function DashboardClient() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [lead, setLead] = useState(initialLead);
   const [result, setResult] = useState<RouteDecision | null>(null);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [connectionNotice, setConnectionNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [routing, setRouting] = useState(false);
@@ -60,15 +72,41 @@ export function DashboardClient() {
     setDashboard((await response.json()) as Dashboard);
   }, []);
 
+  const loadConnections = useCallback(async () => {
+    const response = await fetch("/api/connections", { cache: "no-store" });
+    if (!response.ok) throw new Error("Connection status could not be loaded.");
+    setConnections((await response.json()) as Connection[]);
+  }, []);
+
   useEffect(() => {
-    loadDashboard()
+    Promise.all([loadDashboard(), loadConnections()])
       .catch((caught: unknown) =>
         setError(
           caught instanceof Error ? caught.message : "Something went wrong.",
         ),
       )
       .finally(() => setLoading(false));
-  }, [loadDashboard]);
+    const query = new URLSearchParams(window.location.search);
+    const provider = query.get("connection");
+    const status = query.get("status");
+    if (provider && status) {
+      const messages: Record<string, string> = {
+        connected: `${provider === "google" ? "Google Calendar" : "HubSpot"} connected successfully.`,
+        "missing-config":
+          "Add the provider credentials and encryption settings, then restart Hot Potato.",
+        "setup-denied": "The connector setup key was not accepted.",
+        "invalid-state":
+          "The connection expired or failed its security check. Start again.",
+        denied: "Provider access was not granted.",
+        failed:
+          "The provider could not be connected. Check the server log for details.",
+      };
+      setConnectionNotice(messages[status] ?? "Connection status changed.");
+    }
+  }, [loadConnections, loadDashboard]);
+
+  const connection = (provider: Connection["provider"]) =>
+    connections.find((item) => item.provider === provider);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -134,14 +172,22 @@ export function DashboardClient() {
             <span className="connector-mark">HS</span>
             <div>
               <b>HubSpot</b>
-              <small>Not connected</small>
+              <small>
+                {connection("hubspot")?.connected
+                  ? "Connected"
+                  : "Not connected"}
+              </small>
             </div>
           </div>
           <div className="connection">
             <span className="connector-mark calendar">31</span>
             <div>
               <b>Google Calendar</b>
-              <small>Not connected</small>
+              <small>
+                {connection("google")?.connected
+                  ? "Connected"
+                  : "Not connected"}
+              </small>
             </div>
           </div>
         </div>
@@ -208,10 +254,105 @@ export function DashboardClient() {
             ))}
           </section>
 
-          <section className="router-card" id="router">
+          <section className="connections-card" id="connections">
             <div className="card-heading">
               <div>
                 <span className="section-number">01</span>
+                <div>
+                  <h2>Connections</h2>
+                  <p>Live availability in. Confirmed ownership out.</p>
+                </div>
+              </div>
+              <span className="connection-count">
+                {connections.filter((item) => item.connected).length}/2 LIVE
+              </span>
+            </div>
+            {connectionNotice && (
+              <div className="connection-notice" role="status">
+                {connectionNotice}
+              </div>
+            )}
+            <div className="connection-grid">
+              {(
+                [
+                  {
+                    provider: "hubspot" as const,
+                    mark: "HS",
+                    name: "HubSpot",
+                    copy: "Write the selected rep to the contact owner field after every route.",
+                  },
+                  {
+                    provider: "google" as const,
+                    mark: "31",
+                    name: "Google Calendar",
+                    copy: "Remove busy reps from the pool using a live 30-minute free/busy check.",
+                  },
+                ] as const
+              ).map((item) => {
+                const status = connection(item.provider);
+                return (
+                  <article className="connection-card" key={item.provider}>
+                    <div className="connection-title">
+                      <span
+                        className={`connector-mark ${item.provider === "google" ? "calendar" : ""}`}
+                      >
+                        {item.mark}
+                      </span>
+                      <div>
+                        <h3>{item.name}</h3>
+                        <span
+                          className={`connection-state ${status?.connected ? "connected" : ""}`}
+                        >
+                          <i />{" "}
+                          {status?.connected ? "CONNECTED" : "NOT CONNECTED"}
+                        </span>
+                      </div>
+                    </div>
+                    <p>{item.copy}</p>
+                    {status?.connected ? (
+                      <div className="connected-account">
+                        <span>AUTHORIZED ACCOUNT</span>
+                        <b>
+                          {status.accountName ??
+                            status.accountId ??
+                            "Connected"}
+                        </b>
+                      </div>
+                    ) : status?.configured ? (
+                      <form
+                        method="post"
+                        action={`/api/connections/${item.provider}/start`}
+                      >
+                        <label>
+                          Connector setup key
+                          <input
+                            type="password"
+                            name="setupSecret"
+                            required
+                            autoComplete="off"
+                            placeholder="Enter setup key"
+                          />
+                        </label>
+                        <button type="submit">
+                          Connect {item.name} <span>↗</span>
+                        </button>
+                      </form>
+                    ) : (
+                      <div className="setup-required">
+                        <span>SETUP REQUIRED</span>
+                        <b>Add OAuth credentials to the environment</b>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="router-card" id="router">
+            <div className="card-heading">
+              <div>
+                <span className="section-number">02</span>
                 <div>
                   <h2>Route a lead</h2>
                   <p>Run a real decision through the configured rules.</p>
@@ -315,6 +456,18 @@ export function DashboardClient() {
                       <div>
                         <span>03</span>
                         <p>
+                          <small>AVAILABILITY</small>
+                          <b>
+                            {result.availabilitySource === "google_calendar"
+                              ? "Google free/busy checked"
+                              : "Weekly schedule checked"}
+                          </b>
+                        </p>
+                        <i>✓</i>
+                      </div>
+                      <div>
+                        <span>04</span>
+                        <p>
                           <small>ASSIGNMENT</small>
                           <b>
                             {result.reason === "owner_preserved"
@@ -325,7 +478,7 @@ export function DashboardClient() {
                         <i>✓</i>
                       </div>
                       <div>
-                        <span>04</span>
+                        <span>05</span>
                         <p>
                           <small>WRITEBACK</small>
                           <b>Queued for CRM adapter</b>
@@ -360,7 +513,7 @@ export function DashboardClient() {
             <section className="detail-card" id="rules">
               <div className="card-heading compact">
                 <div>
-                  <span className="section-number">02</span>
+                  <span className="section-number">03</span>
                   <div>
                     <h2>Active rules</h2>
                     <p>First match wins.</p>
@@ -395,7 +548,7 @@ export function DashboardClient() {
             <section className="detail-card" id="pools">
               <div className="card-heading compact">
                 <div>
-                  <span className="section-number">03</span>
+                  <span className="section-number">04</span>
                   <div>
                     <h2>Rep pools</h2>
                     <p>Capacity at a glance.</p>
@@ -438,7 +591,7 @@ export function DashboardClient() {
           <section className="activity-card" id="activity">
             <div className="card-heading compact">
               <div>
-                <span className="section-number">04</span>
+                <span className="section-number">05</span>
                 <div>
                   <h2>Recent routes</h2>
                   <p>A durable explanation for every assignment.</p>

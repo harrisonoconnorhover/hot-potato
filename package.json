@@ -18,7 +18,7 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspace @hot-potato/router",
+    "test": "npm run test --workspace @hot-potato/router && npm run test --workspace @hot-potato/integrations",
     "test:integration": "npm run test:integration --workspace @hot-potato/db",
     "typecheck": "npm run typecheck --workspace @hot-potato/router && npm run build --workspace @hot-potato/router && npm run typecheck --workspace @hot-potato/db && npm run build --workspace @hot-potato/db && npm run typecheck --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/integrations && npm run typecheck --workspace @hot-potato/worker && npm run typecheck --workspace @hot-potato/web",
     "db:migrate": "npm run migrate --workspace @hot-potato/db",

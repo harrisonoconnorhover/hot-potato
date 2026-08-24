@@ -46,6 +46,13 @@ services:
       DATABASE_URL: postgres://hotpotato:hotpotato@postgres:5432/hotpotato
       HOT_POTATO_ORG: acme
       PORT: 3000
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:-}
+      CONNECTOR_SETUP_SECRET: ${CONNECTOR_SETUP_SECRET:-}
+      HUBSPOT_CLIENT_ID: ${HUBSPOT_CLIENT_ID:-}
+      HUBSPOT_CLIENT_SECRET: ${HUBSPOT_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       seed:
         condition: service_completed_successfully
@@ -60,6 +67,9 @@ services:
     environment:
       DATABASE_URL: postgres://hotpotato:hotpotato@postgres:5432/hotpotato
       WORKER_POLL_MS: 1000
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:-}
+      HUBSPOT_CLIENT_ID: ${HUBSPOT_CLIENT_ID:-}
+      HUBSPOT_CLIENT_SECRET: ${HUBSPOT_CLIENT_SECRET:-}
     depends_on:
       seed:
         condition: service_completed_successfully

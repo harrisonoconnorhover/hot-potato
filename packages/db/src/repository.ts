@@ -1,4 +1,5 @@
 import {
+  eligibleRepsForLead,
   routeLead as evaluateRoute,
   type AssignmentState,
   type Rep,
@@ -7,7 +8,16 @@ import {
 } from "@hot-potato/router";
 import type { JSONValue, Sql, TransactionSql } from "postgres";
 import { createDatabase } from "./client.js";
-import type { Dashboard, Job, RouteDecision, RouteRequest } from "./types.js";
+import type {
+  ConnectionStatus,
+  Dashboard,
+  Job,
+  OAuthConnection,
+  OAuthProvider,
+  RouteDecision,
+  RouteRequest,
+  SaveOAuthConnection,
+} from "./types.js";
 
 type OrganizationRow = { id: string; name: string; slug: string };
 type RuleRow = {
@@ -82,6 +92,8 @@ function decisionFromRow(row: Record<string, unknown>): RouteDecision {
     reason: row.reason as RouteDecision["reason"],
     createdAt: new Date(String(row.createdAt)).toISOString(),
     writebackStatus: String(row.writebackStatus),
+    availabilitySource:
+      row.availabilitySource as RouteDecision["availabilitySource"],
   };
 }
 
@@ -115,7 +127,8 @@ export class HotPotatoRepository {
         const [existing] = await transaction`
           SELECT rd.id, rd.lead_email, rd.reason, rd.created_at, r.name AS rep_name,
                  r.email AS rep_email, rr.name AS rule_name, rp.name AS pool_name,
-                 coalesce(j.status, 'missing') AS writeback_status
+                 coalesce(j.status, 'missing') AS writeback_status,
+                 rd.availability_source
           FROM routing_decisions rd
           JOIN reps r ON r.id = rd.rep_id
           JOIN routing_rules rr ON rr.id = rd.rule_id
@@ -133,21 +146,33 @@ export class HotPotatoRepository {
         request.lead,
         loaded.context,
         request.now,
+        { unavailableRepEmails: request.unavailableRepEmails },
       );
 
       await transaction`
         SELECT pg_advisory_xact_lock(hashtext(${preliminary.rule.poolId}))
       `;
       loaded = await routingContext(transaction, organization.id);
-      const result = evaluateRoute(request.lead, loaded.context, request.now);
+      const result = evaluateRoute(request.lead, loaded.context, request.now, {
+        unavailableRepEmails: request.unavailableRepEmails,
+      });
+
+      const [hubspotConnection] = await transaction`
+        SELECT 1 FROM oauth_connections
+        WHERE organization_id = ${organization.id} AND provider = 'hubspot'
+      `;
+      const crmAdapter = hubspotConnection ? "hubspot" : "development";
+      const availabilitySource =
+        request.availabilitySource ?? "weekly_schedule";
 
       const [decision] = await transaction`
         INSERT INTO routing_decisions (
-          organization_id, external_id, lead_email, lead, rule_id, pool_id, rep_id, reason
+          organization_id, external_id, lead_email, lead, rule_id, pool_id, rep_id,
+          reason, availability_source
         ) VALUES (
           ${organization.id}, ${request.externalId ?? null}, ${request.lead.email},
           ${transaction.json(request.lead as JSONValue)}, ${result.rule.id}, ${result.rule.poolId},
-          ${result.rep.id}, ${result.reason}
+          ${result.rep.id}, ${result.reason}, ${availabilitySource}
         )
         ON CONFLICT (organization_id, external_id)
         DO UPDATE SET external_id = EXCLUDED.external_id
@@ -168,7 +193,8 @@ export class HotPotatoRepository {
           ${organization.id},
           'crm.owner.writeback',
           ${transaction.json({
-            adapter: "development",
+            adapter: crmAdapter,
+            organizationSlug: organization.slug,
             decisionId: decision!.id,
             leadEmail: request.lead.email,
             ownerEmail: result.rep.email,
@@ -187,8 +213,46 @@ export class HotPotatoRepository {
         reason: result.reason,
         createdAt: new Date(String(decision!.createdAt)).toISOString(),
         writebackStatus: "pending",
+        availabilitySource,
       };
     });
+  }
+
+  async routeCandidates(
+    request: Pick<RouteRequest, "organizationSlug" | "lead" | "now">,
+  ): Promise<string[]> {
+    const [organization] = (await this.sql`
+      SELECT id, name, slug FROM organizations WHERE slug = ${request.organizationSlug}
+    `) as unknown as OrganizationRow[];
+    if (!organization)
+      throw new Error(`Unknown organization: ${request.organizationSlug}`);
+
+    const loaded = await routingContext(this.sql, organization.id);
+    return eligibleRepsForLead(
+      request.lead,
+      loaded.context,
+      request.now,
+    ).reps.map((rep) => rep.email);
+  }
+
+  async decisionByExternalId(
+    organizationSlug: string,
+    externalId: string,
+  ): Promise<RouteDecision | null> {
+    const [row] = await this.sql`
+      SELECT rd.id, rd.lead_email, rd.reason, rd.created_at, r.name AS rep_name,
+             r.email AS rep_email, rr.name AS rule_name, rp.name AS pool_name,
+             coalesce(j.status, 'missing') AS writeback_status,
+             rd.availability_source
+      FROM routing_decisions rd
+      JOIN organizations o ON o.id = rd.organization_id
+      JOIN reps r ON r.id = rd.rep_id
+      JOIN routing_rules rr ON rr.id = rd.rule_id
+      JOIN routing_pools rp ON rp.id = rd.pool_id
+      LEFT JOIN jobs j ON j.payload->>'decisionId' = rd.id::text
+      WHERE o.slug = ${organizationSlug} AND rd.external_id = ${externalId}
+    `;
+    return row ? decisionFromRow(row) : null;
   }
 
   async dashboard(organizationSlug: string): Promise<Dashboard> {
@@ -252,7 +316,8 @@ export class HotPotatoRepository {
     const decisionRows = await this.sql`
       SELECT rd.id, rd.lead_email, rd.reason, rd.created_at, r.name AS rep_name,
              r.email AS rep_email, rr.name AS rule_name, rp.name AS pool_name,
-             coalesce(j.status, 'missing') AS writeback_status
+             coalesce(j.status, 'missing') AS writeback_status,
+             rd.availability_source
       FROM routing_decisions rd
       JOIN reps r ON r.id = rd.rep_id
       JOIN routing_rules rr ON rr.id = rd.rule_id
@@ -309,9 +374,13 @@ export class HotPotatoRepository {
     };
   }
 
-  async completeJob(id: number): Promise<void> {
+  async completeJob(
+    id: number,
+    result?: Record<string, unknown>,
+  ): Promise<void> {
     await this.sql`
-      UPDATE jobs SET status = 'completed', completed_at = now(), locked_at = null
+      UPDATE jobs SET status = 'completed', completed_at = now(), locked_at = null,
+        result = ${result ? this.sql.json(result as JSONValue) : null}
       WHERE id = ${id}
     `;
   }
@@ -325,5 +394,93 @@ export class HotPotatoRepository {
         last_error = ${error}
       WHERE id = ${id}
     `;
+  }
+
+  async getOAuthConnection(
+    organizationSlug: string,
+    provider: OAuthProvider,
+  ): Promise<OAuthConnection | null> {
+    const [row] = await this.sql`
+      SELECT o.slug AS organization_slug, c.provider, c.encrypted_access_token,
+             c.encrypted_refresh_token, c.expires_at, c.scopes,
+             c.external_account_id, c.external_account_name, c.metadata, c.updated_at
+      FROM oauth_connections c
+      JOIN organizations o ON o.id = c.organization_id
+      WHERE o.slug = ${organizationSlug} AND c.provider = ${provider}
+    `;
+    if (!row) return null;
+    return {
+      organizationSlug: String(row.organizationSlug),
+      provider: row.provider as OAuthProvider,
+      encryptedAccessToken: String(row.encryptedAccessToken),
+      encryptedRefreshToken: String(row.encryptedRefreshToken),
+      expiresAt: new Date(String(row.expiresAt)),
+      scopes: row.scopes as string[],
+      externalAccountId: row.externalAccountId
+        ? String(row.externalAccountId)
+        : null,
+      externalAccountName: row.externalAccountName
+        ? String(row.externalAccountName)
+        : null,
+      metadata: row.metadata as Record<string, unknown>,
+      updatedAt: new Date(String(row.updatedAt)),
+    };
+  }
+
+  async saveOAuthConnection(connection: SaveOAuthConnection): Promise<void> {
+    const [organization] = await this.sql`
+      SELECT id FROM organizations WHERE slug = ${connection.organizationSlug}
+    `;
+    if (!organization) {
+      throw new Error(`Unknown organization: ${connection.organizationSlug}`);
+    }
+
+    await this.sql`
+      INSERT INTO oauth_connections (
+        organization_id, provider, encrypted_access_token, encrypted_refresh_token,
+        expires_at, scopes, external_account_id, external_account_name, metadata
+      ) VALUES (
+        ${organization.id}, ${connection.provider}, ${connection.encryptedAccessToken},
+        ${connection.encryptedRefreshToken}, ${connection.expiresAt},
+        ${connection.scopes}, ${connection.externalAccountId},
+        ${connection.externalAccountName}, ${this.sql.json(connection.metadata as JSONValue)}
+      )
+      ON CONFLICT (organization_id, provider) DO UPDATE SET
+        encrypted_access_token = EXCLUDED.encrypted_access_token,
+        encrypted_refresh_token = EXCLUDED.encrypted_refresh_token,
+        expires_at = EXCLUDED.expires_at,
+        scopes = EXCLUDED.scopes,
+        external_account_id = EXCLUDED.external_account_id,
+        external_account_name = EXCLUDED.external_account_name,
+        metadata = EXCLUDED.metadata,
+        updated_at = now()
+    `;
+  }
+
+  async connectionStatuses(
+    organizationSlug: string,
+  ): Promise<ConnectionStatus[]> {
+    const rows = await this.sql`
+      SELECT providers.provider, c.external_account_id, c.external_account_name,
+             c.scopes, c.expires_at
+      FROM (VALUES ('hubspot'::text), ('google'::text)) AS providers(provider)
+      CROSS JOIN organizations o
+      LEFT JOIN oauth_connections c
+        ON c.organization_id = o.id AND c.provider = providers.provider
+      WHERE o.slug = ${organizationSlug}
+      ORDER BY providers.provider
+    `;
+    return rows.map((row) => ({
+      provider: row.provider as OAuthProvider,
+      connected: Boolean(row.expiresAt),
+      accountId: row.externalAccountId ? String(row.externalAccountId) : null,
+      accountName: row.externalAccountName
+        ? String(row.externalAccountName)
+        : null,
+      scopes: (row.scopes as string[] | null) ?? [],
+      expiresAt: row.expiresAt
+        ? new Date(String(row.expiresAt)).toISOString()
+        : null,
+    }));
   }
 }

@@ -68,3 +68,12 @@ export type RouteResult = {
   reason: RouteReason;
   evaluatedAt: Date;
 };
+
+export type RouteOptions = {
+  unavailableRepEmails?: string[];
+};
+
+export type EligibleRoute = {
+  rule: Rule;
+  reps: Rep[];
+};

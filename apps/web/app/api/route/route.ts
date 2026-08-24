@@ -1,6 +1,8 @@
 import { NoEligibleRepError, NoMatchingRuleError } from "@hot-potato/router";
+import { GoogleCalendarAdapter } from "@hot-potato/integrations";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { connectionManager } from "../../connections";
 import { repository } from "../../repository";
 
 const routeRequest = z.object({
@@ -23,10 +25,58 @@ export async function POST(request: Request) {
   }
 
   try {
+    const organizationSlug = process.env.HOT_POTATO_ORG ?? "acme";
+    if (parsed.data.externalId) {
+      const existing = await repository.decisionByExternalId(
+        organizationSlug,
+        parsed.data.externalId,
+      );
+      if (existing) return NextResponse.json(existing);
+    }
+
+    const now = new Date();
+    let unavailableRepEmails: string[] = [];
+    let availabilitySource: "weekly_schedule" | "google_calendar" =
+      "weekly_schedule";
+    const googleConnection = await repository.getOAuthConnection(
+      organizationSlug,
+      "google",
+    );
+    if (googleConnection) {
+      const candidates = await repository.routeCandidates({
+        organizationSlug,
+        lead: parsed.data.lead,
+        now,
+      });
+      const calendar = new GoogleCalendarAdapter(() =>
+        connectionManager().accessToken(organizationSlug, "google"),
+      );
+      try {
+        unavailableRepEmails = await calendar.busyRepEmails({
+          repEmails: candidates,
+          startsAt: now,
+          endsAt: new Date(now.getTime() + 30 * 60_000),
+        });
+        availabilitySource = "google_calendar";
+      } catch (error) {
+        console.error(
+          "Google Calendar availability failed:",
+          error instanceof Error ? error.message : "Unknown error",
+        );
+        return NextResponse.json(
+          { error: "Google Calendar availability could not be verified." },
+          { status: 503 },
+        );
+      }
+    }
+
     const decision = await repository.route({
-      organizationSlug: process.env.HOT_POTATO_ORG ?? "acme",
+      organizationSlug,
       externalId: parsed.data.externalId,
       lead: parsed.data.lead,
+      now,
+      unavailableRepEmails,
+      availabilitySource,
     });
     return NextResponse.json(decision, { status: 201 });
   } catch (error) {

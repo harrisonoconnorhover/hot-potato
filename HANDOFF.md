@@ -2,40 +2,40 @@
 
 ## Finished
 
-- Created the separate public AGPL product repository and portable npm workspace.
-- Built a real routing engine with nested rules, schedules, owner preservation, per-pool weighted round robin, and explicit failure states.
-- Added transactional PostgreSQL decisions, idempotent request handling, assignment history, migrations, seed data, and a recoverable job queue.
-- Added CRM/calendar adapter contracts, a development CRM worker, and Docker Compose startup.
-- Built a responsive operator workspace that routes through the real API and displays rules, pools, results, and audit history.
+- Added refreshable HubSpot and Google OAuth install/callback flows with state validation, encrypted token storage, and refresh coalescing.
+- Added Google Calendar free/busy filtering before assignment; connected-calendar errors fail closed and each decision records its availability source.
+- Added queued HubSpot writeback that resolves a representative by owner email and updates the contact owner by lead email.
+- Added a polished Connections workspace, setup-key protection, responsive states, provider tests, environment setup, and operator documentation.
+- Preserved idempotent routes so duplicate external IDs return the original decision before making a calendar call.
 
 ## Try It
 
-Run `docker compose up --build`, then open `http://localhost:3000`. The seeded lead matches Enterprise Northeast; select **Run route** to create a persisted assignment and CRM job.
+Follow `README.md` to create `.env` and the two provider OAuth clients. Run `docker compose up --build`, open `http://localhost:3000`, then connect both accounts in **Connections**.
 
 ## Checks
 
-- `npm run format:check` — passed.
-- `npm run typecheck` — passed across all workspaces.
-- `npm test` — 7 routing tests passed.
-- `npm run build` — all packages and the Next.js production build passed.
-- PostgreSQL integration, idempotent API smoke, worker completion, Docker health, and browser QA at 1440px/390px all passed; mobile had no horizontal overflow or console errors.
+- Formatting, lint, typecheck, and production build passed across all workspaces.
+- 8 router tests and 10 integration/OAuth tests passed.
+- PostgreSQL migration, seed, decision lookup, and integration smoke passed.
+- Rebuilt Docker stack passed health, idempotent route, durable worker, and saved-result checks.
+- Browser QA passed at 1440px and 390px with no overflow, warnings, or errors; the mobile route interaction passed.
 
 ## Decisions
 
-- Use PostgreSQL for both application data and jobs so self-hosting requires one stateful service.
-- Keep routing logic pure and provider-neutral; external side effects live behind adapters in the worker.
-- License code as AGPL-3.0-only while reserving the Hot Potato name, mascot, and visual identity.
+- Encrypt provider tokens with AES-256-GCM and keep the encryption key outside PostgreSQL.
+- Require Google free/busy once connected; never guess availability after a provider failure.
+- Keep HubSpot writeback asynchronous and retryable so routing does not wait on CRM latency.
 
 ## Remaining
 
-- Implement HubSpot OAuth, object lookup, and owner writeback.
-- Implement Google Calendar OAuth and free/busy eligibility.
-- Add authentication, organization onboarding, and secrets management.
-- Add rule/pool editing rather than seeded configuration.
+- Create the HubSpot and Google OAuth clients, add the six uncommitted environment values, and authorize both accounts.
+- Replace seeded `.example` representative emails with real HubSpot owner and Google Calendar emails before live routing.
+- Add product user authentication before exposing the application publicly.
+- Add organization onboarding and rule/pool editing.
 - Choose and deploy the first hosted application environment.
 
 ## Review First
 
-- `apps/web/components/dashboard-client.tsx` for the product experience.
-- `packages/router/src/router.ts` and its tests for assignment semantics.
-- `packages/db/src/repository.ts` for transaction and job behavior.
+- `packages/integrations/src/google.ts` and `packages/integrations/src/hubspot.ts` for provider behavior.
+- `apps/web/app/api/connections` and `apps/web/app/api/route/route.ts` for OAuth and routing flow.
+- `apps/web/components/dashboard-client.tsx` for the operator experience.

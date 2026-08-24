@@ -13,6 +13,13 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "google-auth-library": "11.0.2"
+  },
+  "devDependencies": {
+    "vitest": "4.1.11"
   }
 }

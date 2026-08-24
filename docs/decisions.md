@@ -19,3 +19,15 @@ DayOtter and Cal.com informed the package boundaries and self-hosting posture. T
 ## 2026-08-23 — AGPL code, reserved product identity
 
 Source code uses AGPL-3.0-only. The Hot Potato name, mascot, and visual identity are not granted by the software license; see `TRADEMARKS.md`.
+
+## 2026-08-24 — Encrypt refreshable OAuth connections
+
+HubSpot and Google use authorization-code OAuth with refresh tokens. Access and refresh tokens are encrypted before storage with an environment-held AES-256-GCM key. A separate setup secret protects connector installation until full product authentication exists.
+
+## 2026-08-24 — Fail closed on connected-calendar errors
+
+Weekly schedules remain the local fallback when Google is not connected. Once it is connected, a failed or ambiguous free/busy lookup stops the route rather than assigning a representative whose availability was not verified.
+
+## 2026-08-24 — Keep CRM writeback asynchronous
+
+The routing decision commits before the external HubSpot call. The worker refreshes the token, resolves the selected representative by HubSpot owner email, and patches the contact by lead email. Retries remain visible in the existing durable job record.

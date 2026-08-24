@@ -115,6 +115,20 @@ describe("routing", () => {
     expect(result.reason).toBe("owner_preserved");
   });
 
+  it("excludes reps reported busy by a calendar provider", () => {
+    const result = routeLead(
+      {
+        email: "buyer@example.com",
+        company: { employee_count: 900, state: "NY" },
+      },
+      context,
+      monday,
+      { unavailableRepEmails: ["ada@example.com"] },
+    );
+
+    expect(result.rep.id).toBe("marcus");
+  });
+
   it("fails explicitly when no rule matches", () => {
     expect(() =>
       routeLead(

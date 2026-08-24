@@ -32,9 +32,33 @@ Run `npm run dev:worker` in a second terminal.
 - Transaction-safe weighted round robin with per-pool assignment state
 - PostgreSQL decision history and idempotent external request IDs
 - Postgres-backed jobs with retries and concurrent-worker-safe claiming
+- Google OAuth and Calendar free/busy filtering before assignment
+- HubSpot OAuth and queued contact-owner writeback after assignment
 - A responsive operator workspace backed by the real routing API
 
-The development CRM adapter completes queued jobs locally. HubSpot OAuth/writeback and Google Calendar free/busy are the next connector milestones; the current product does not claim those external calls are implemented.
+Without provider credentials, the development CRM adapter completes queued jobs locally and weekly schedules drive availability. Once connected, Google Calendar becomes a required free/busy check and HubSpot jobs write the selected owner to the contact matched by email.
+
+## Connect HubSpot and Google Calendar
+
+Copy `.env.example` to `.env`, generate the two local secrets shown in that file, and create one OAuth application with each provider.
+
+For HubSpot, use this redirect URL:
+
+```text
+http://localhost:3000/api/connections/hubspot/callback
+```
+
+Grant `oauth`, `crm.objects.contacts.write`, and `crm.objects.owners.read`. Hot Potato resolves a representative by their HubSpot owner email, then updates the matching contact's `hubspot_owner_id`.
+
+For Google Cloud, enable the Google Calendar API, create a Web application OAuth client, and use:
+
+```text
+http://localhost:3000/api/connections/google/callback
+```
+
+The requested Google scopes are identity/email plus Calendar free/busy. Add your account as a test user if the consent screen is still in testing mode.
+
+After restarting the stack, open the **Connections** section and connect each provider using the connector setup secret. Never commit `.env` or provider credentials. For a deployed instance, set `APP_URL` to the public HTTPS origin and register the equivalent HTTPS callback URLs with both providers.
 
 ## API
 
@@ -61,10 +85,10 @@ lead payload
 Next.js web + API ──► routing engine ──► PostgreSQL audit log
                             │                    │
                             ▼                    ▼
-                   availability + W-RR    durable job queue
+                 Google free/busy + W-RR  durable job queue
                                                  │
                                                  ▼
-                                           worker adapters
+                                      HubSpot owner writeback
 ```
 
 The monorepo separates the product surface from reusable routing and persistence packages:
