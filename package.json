@@ -1,0 +1,33 @@
+{
+  "name": "hot-potato",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source inbound lead routing for GTM teams.",
+  "license": "AGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @hot-potato/router && npm run build --workspace @hot-potato/db && npm run build --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/worker && npm run build --workspace @hot-potato/web",
+    "dev": "npm run dev --workspace @hot-potato/web",
+    "dev:worker": "npm run dev --workspace @hot-potato/worker",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspace @hot-potato/router",
+    "test:integration": "npm run test:integration --workspace @hot-potato/db",
+    "typecheck": "npm run typecheck --workspace @hot-potato/router && npm run build --workspace @hot-potato/router && npm run typecheck --workspace @hot-potato/db && npm run build --workspace @hot-potato/db && npm run typecheck --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/integrations && npm run typecheck --workspace @hot-potato/worker && npm run typecheck --workspace @hot-potato/web",
+    "db:migrate": "npm run migrate --workspace @hot-potato/db",
+    "db:seed": "npm run seed --workspace @hot-potato/db",
+    "db:setup": "npm run build --workspace @hot-potato/router && npm run build --workspace @hot-potato/db && npm run db:migrate && npm run db:seed"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "prettier": "3.6.2",
+    "typescript": "7.0.2"
+  }
+}

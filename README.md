@@ -1,0 +1,86 @@
+# Hot Potato
+
+Open-source inbound lead routing for GTM teams.
+
+Hot Potato turns a lead payload into an explainable assignment: match the first eligible rule, preserve a valid owner when possible, choose an available rep with weighted round robin, persist the decision, and queue CRM writeback.
+
+## Run it
+
+The complete local stack needs Docker and nothing else:
+
+```bash
+docker compose up --build
+```
+
+Open [http://localhost:3000](http://localhost:3000). The compose stack starts PostgreSQL, applies migrations, loads a development workspace, runs the web/API process, and starts the job worker.
+
+To work on the app with Node.js 22+:
+
+```bash
+npm install
+docker compose up -d postgres
+npm run db:setup
+npm run dev
+```
+
+Run `npm run dev:worker` in a second terminal.
+
+## What works today
+
+- Priority-ordered rules over nested CRM-style fields
+- Weekly schedules, active-rep filtering, and current-owner preservation
+- Transaction-safe weighted round robin with per-pool assignment state
+- PostgreSQL decision history and idempotent external request IDs
+- Postgres-backed jobs with retries and concurrent-worker-safe claiming
+- A responsive operator workspace backed by the real routing API
+
+The development CRM adapter completes queued jobs locally. HubSpot OAuth/writeback and Google Calendar free/busy are the next connector milestones; the current product does not claim those external calls are implemented.
+
+## API
+
+```bash
+curl -X POST http://localhost:3000/api/route \
+  -H 'content-type: application/json' \
+  -d '{
+    "externalId": "form-submission-123",
+    "lead": {
+      "email": "maya@example.com",
+      "company": { "employee_count": 820, "state": "NY" }
+    }
+  }'
+```
+
+Reusing an `externalId` returns the original decision without consuming another round-robin assignment.
+
+## Architecture
+
+```text
+lead payload
+    │
+    ▼
+Next.js web + API ──► routing engine ──► PostgreSQL audit log
+                            │                    │
+                            ▼                    ▼
+                   availability + W-RR    durable job queue
+                                                 │
+                                                 ▼
+                                           worker adapters
+```
+
+The monorepo separates the product surface from reusable routing and persistence packages:
+
+```text
+apps/web       operator UI and HTTP API
+apps/worker    background job processor
+packages/router pure routing domain logic
+packages/db    schema, migrations, repository, seed data
+packages/integrations provider contracts and development adapters
+```
+
+See [architecture](docs/architecture.md), [decisions](docs/decisions.md), and [contributing](CONTRIBUTING.md) for more detail.
+
+## Open source
+
+The code is licensed under [AGPL-3.0-only](LICENSE). The Hot Potato name, mascot, and visual identity are covered separately by [TRADEMARKS.md](TRADEMARKS.md); the software license does not imply permission to present a modified service as the official Hot Potato product.
+
+DayOtter and Cal.com were useful public architecture references. No third-party source code was copied into this initial implementation.

@@ -1,0 +1,25 @@
+{
+  "name": "@hot-potato/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "migrate": "node dist/migrate.js",
+    "seed": "node dist/seed.js",
+    "test:integration": "node dist/integration-smoke.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@hot-potato/router": "*",
+    "postgres": "3.4.9"
+  }
+}
