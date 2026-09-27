@@ -20,10 +20,12 @@ To work on the app with Node.js 22+:
 npm install
 docker compose up -d postgres
 npm run db:setup
+npm run build --workspace @hot-potato/integrations
+npm run build --workspace @hot-potato/worker
 npm run dev
 ```
 
-Run `npm run dev:worker` in a second terminal.
+Run `npm run dev:worker` in a second terminal. The setup builds the local packages before starting the web app and worker; a fresh checkout does not include their generated JavaScript. After changing a shared package or worker source, rerun that package's build command.
 
 ## What works today
 

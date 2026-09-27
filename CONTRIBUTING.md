@@ -8,7 +8,8 @@ Thanks for helping make inbound routing less painful.
 2. Run `npm install`.
 3. Run `docker compose up -d postgres`.
 4. Run `npm run db:setup`.
-5. Run `npm run dev`; start `npm run dev:worker` separately when testing jobs.
+5. Run `npm run build --workspace @hot-potato/integrations`, then `npm run build --workspace @hot-potato/worker`. These packages need generated JavaScript before the web app and worker can start.
+6. Run `npm run dev`; start `npm run dev:worker` separately when testing jobs. After changing a shared package or worker source, rerun that package's build command.
 
 Before opening a pull request, run:
 
