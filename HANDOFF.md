@@ -29,7 +29,7 @@
 
 ## Remaining
 
-- Development guard mirror `f6b761b` passed typecheck and 13 focused tests, preserving cancellation, claim-token fencing, booking behavior and both existing Outlook edits. Its dependency patch is being synchronized separately.
+- Development mirrors `f6b761b` and `dbbe58c` passed 13 focused guard/calendar tests, 276 web tests, typecheck and build. Existing Outlook edits remain unchanged. That unpublished checkout retains one pre-existing high Nodemailer advisory; this public release reports none.
 - This guard does not detect ownership edits made independently inside the CRM. Hosted/provider deployment is unchanged.
 
 ## Review First
