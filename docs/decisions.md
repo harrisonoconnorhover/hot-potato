@@ -1,5 +1,21 @@
 # Product and engineering decisions
 
+## September 27, 2026: preserve newer queued owner assignments
+
+Owner-writeback retries must not apply obsolete assignments. Before the provider
+callback, compare the job with the newest owner-writeback job for the same
+organization and normalized contact email. Mark older work as superseded.
+
+Hold a PostgreSQL transaction advisory lock for that contact through the callback
+so an already-running older write finishes before a newer one can write. Release
+the lock on success or failure. This concerns this installation's queued writes;
+it does not claim protection from independent edits inside the CRM.
+
+The existing database smoke now exercises retry ordering and concurrent callbacks
+in a disposable PostgreSQL CI service. Local worker tests prove that superseded
+jobs do not invoke the CRM adapter. Public release changes stay separate from the
+unpublished local product backlog.
+
 ## 2026-08-23 — Separate the product from the marketing site
 
 The application lives in `hot-potato`; the existing static website remains independently deployable. Product infrastructure will not depend on the marketing host.

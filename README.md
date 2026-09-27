@@ -38,6 +38,14 @@ Run `npm run dev:worker` in a second terminal.
 
 Without provider credentials, the development CRM adapter completes queued jobs locally and weekly schedules drive availability. Once connected, Google Calendar becomes a required free/busy check and HubSpot jobs write the selected owner to the contact matched by email.
 
+## Inspect the retry failure case
+
+An older failed owner update must not overwrite a newer assignment when it retries. The worker checks the latest queued assignment for the same organization and contact, skips obsolete work as `superseded`, and serializes owner writes for that contact. The operator view preserves that outcome instead of reporting a CRM write that never happened.
+
+The [database smoke check](packages/db/src/integration-smoke.ts) exercises an old failure, a newer success, and the skipped retry, plus two concurrent writes. The [worker tests](apps/worker/test/owner-writeback.test.ts) verify that obsolete jobs never call the adapter. Run `npm test`, then `npm run db:setup && npm run test:integration` against a disposable PostgreSQL database. CI runs these checks with synthetic callbacks; no provider credentials are required.
+
+This guard orders this installation's queued writes. It does not detect ownership changes made directly in the CRM.
+
 ## Connect HubSpot and Google Calendar
 
 Copy `.env.example` to `.env` and generate the two local secrets shown in that file.
