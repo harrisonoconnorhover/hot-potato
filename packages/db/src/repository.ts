@@ -14,6 +14,7 @@ import type {
   Job,
   OAuthConnection,
   OAuthProvider,
+  OwnerWritebackResult,
   RouteDecision,
   RouteRequest,
   SaveOAuthConnection,
@@ -377,12 +378,49 @@ export class HotPotatoRepository {
   async completeJob(
     id: number,
     result?: Record<string, unknown>,
+    status: "completed" | "superseded" = "completed",
   ): Promise<void> {
     await this.sql`
-      UPDATE jobs SET status = 'completed', completed_at = now(), locked_at = null,
+      UPDATE jobs SET status = ${status}, completed_at = now(), locked_at = null,
         result = ${result ? this.sql.json(result as JSONValue) : null}
       WHERE id = ${id}
     `;
+  }
+
+  async applyCurrentOwnerWriteback(
+    jobId: number,
+    write: () => Promise<{ externalReference: string }>,
+  ): Promise<OwnerWritebackResult> {
+    return this.sql.begin(async (transaction) => {
+      const [job] = await transaction`
+        SELECT organization_id, lower(payload->>'leadEmail') AS lead_email
+        FROM jobs WHERE id = ${jobId} AND type = 'crm.owner.writeback'
+      `;
+      if (!job?.leadEmail)
+        throw new Error(`Owner writeback job ${jobId} was not found.`);
+
+      // Hold this contact's lock through the write: an older in-flight call must
+      // finish before a newer owner can be written by another worker.
+      await transaction`
+        SELECT pg_advisory_xact_lock(
+          hashtext(${`owner-writeback:${job.organizationId}:${job.leadEmail}`})
+        )
+      `;
+      const [latest] = await transaction`
+        SELECT id FROM jobs
+        WHERE organization_id = ${job.organizationId}
+          AND type = 'crm.owner.writeback'
+          AND lower(payload->>'leadEmail') = ${job.leadEmail}
+        ORDER BY id DESC LIMIT 1
+      `;
+      if (Number(latest?.id) !== jobId) return { status: "superseded" };
+
+      const result = await write();
+      return {
+        status: "completed",
+        externalReference: result.externalReference,
+      };
+    });
   }
 
   async failJob(id: number, error: string): Promise<void> {

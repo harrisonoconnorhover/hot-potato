@@ -11,6 +11,22 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: hotpotato
+          POSTGRES_USER: hotpotato
+          POSTGRES_PASSWORD: hotpotato
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hotpotato -d hotpotato"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://hotpotato:hotpotato@localhost:5432/hotpotato
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,4 +37,6 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
+      - run: npm run db:setup
+      - run: npm run test:integration
       - run: npm run build

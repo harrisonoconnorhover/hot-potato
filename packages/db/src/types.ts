@@ -85,3 +85,7 @@ export type Job = {
   payload: Record<string, unknown>;
   attempts: number;
 };
+
+export type OwnerWritebackResult =
+  | { status: "completed"; externalReference: string }
+  | { status: "superseded" };

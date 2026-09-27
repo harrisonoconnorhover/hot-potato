@@ -1,13 +1,17 @@
 import { setTimeout as delay } from "node:timers/promises";
-import { HotPotatoRepository, type Job } from "@hot-potato/db";
+import {
+  HotPotatoRepository,
+  type Job,
+  type OwnerWritebackResult,
+} from "@hot-potato/db";
 import {
   createConnectionTokenManager,
   DevelopmentCrmAdapter,
   HubSpotCrmAdapter,
   type ConnectionTokenManager,
   type CrmAdapter,
-  type CrmWritebackResult,
 } from "@hot-potato/integrations";
+import { writeOwnerJob } from "./owner-writeback.js";
 
 const repository = new HotPotatoRepository();
 const pollMs = Number(process.env.WORKER_POLL_MS ?? 1_000);
@@ -29,7 +33,7 @@ function crmAdapter(job: Job): CrmAdapter | undefined {
   return undefined;
 }
 
-async function handle(job: Job): Promise<CrmWritebackResult> {
+async function handle(job: Job): Promise<OwnerWritebackResult> {
   if (job.type !== "crm.owner.writeback") {
     throw new Error(`Unsupported job type: ${job.type}`);
   }
@@ -40,20 +44,18 @@ async function handle(job: Job): Promise<CrmWritebackResult> {
     throw new Error(`CRM adapter is not configured: ${adapter}`);
   }
 
-  const result = await crm.writeOwner({
-    decisionId: String(job.payload.decisionId),
-    leadEmail: String(job.payload.leadEmail),
-    ownerEmail: String(job.payload.ownerEmail),
-  });
+  const result = await writeOwnerJob(job, repository, crm);
 
   console.log(
     JSON.stringify({
-      event: "crm.owner.writeback.completed",
+      event: `crm.owner.writeback.${result.status}`,
       jobId: job.id,
       adapter,
       leadEmail: job.payload.leadEmail,
       ownerEmail: job.payload.ownerEmail,
-      externalReference: result.externalReference,
+      ...(result.status === "completed"
+        ? { externalReference: result.externalReference }
+        : {}),
     }),
   );
   return result;
@@ -70,9 +72,7 @@ async function run(): Promise<void> {
 
     try {
       const result = await handle(job);
-      await repository.completeJob(job.id, {
-        externalReference: result.externalReference,
-      });
+      await repository.completeJob(job.id, result, result.status);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(
