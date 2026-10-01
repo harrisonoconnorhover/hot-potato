@@ -6,11 +6,16 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
+    "test": "vitest run --config vitest.config.mts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@azure/msal-browser": "4.30.0",
     "@hot-potato/db": "*",
+    "@hot-potato/email-composer": "*",
+    "@hot-potato/integrations": "*",
     "@hot-potato/router": "*",
+    "jose": "6.2.10",
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -18,6 +23,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3"
+    "@types/react-dom": "19.2.3",
+    "vitest": "4.1.11"
   }
 }

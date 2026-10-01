@@ -1,6 +1,7 @@
 import {
   createCipheriv,
   createDecipheriv,
+  createHash,
   randomBytes,
   timingSafeEqual,
 } from "node:crypto";
@@ -62,6 +63,14 @@ export class TokenCipher {
 
 export function createOAuthState(): string {
   return randomBytes(32).toString("base64url");
+}
+
+export function createOAuthPkce(): { verifier: string; challenge: string } {
+  const verifier = randomBytes(32).toString("base64url");
+  return {
+    verifier,
+    challenge: createHash("sha256").update(verifier).digest("base64url"),
+  };
 }
 
 export function oauthStatesEqual(left: string, right: string): boolean {

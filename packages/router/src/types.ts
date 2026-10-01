@@ -38,6 +38,8 @@ export type WeeklyAvailability = Partial<
   >
 >;
 
+export type DateAvailabilityOverrides = Record<string, TimeRange[]>;
+
 export type Rep = {
   id: string;
   name: string;
@@ -46,6 +48,7 @@ export type Rep = {
   weight: number;
   active: boolean;
   availability: WeeklyAvailability;
+  availabilityOverrides?: DateAvailabilityOverrides;
 };
 
 export type AssignmentState = {
@@ -76,4 +79,72 @@ export type RouteOptions = {
 export type EligibleRoute = {
   rule: Rule;
   reps: Rep[];
+};
+
+export type PredicateOperator =
+  | "eq"
+  | "in"
+  | "gte"
+  | "lte"
+  | "contains"
+  | "exists";
+
+export type RoutingPreviewValue =
+  | string
+  | number
+  | boolean
+  | null
+  | RoutingPreviewValue[]
+  | { [key: string]: RoutingPreviewValue };
+
+export type RoutingPreviewCondition = {
+  field: string;
+  operator: PredicateOperator;
+  expected: RoutingPreviewValue;
+  actual: RoutingPreviewValue;
+  matched: boolean;
+};
+
+export type RoutingPreviewRule = {
+  id: string;
+  name: string;
+  priority: number;
+  poolId: string;
+  matched: boolean;
+  conditions: RoutingPreviewCondition[];
+};
+
+export type RoutingPreviewSelectedRule = Pick<
+  RoutingPreviewRule,
+  "id" | "name" | "priority" | "poolId"
+>;
+
+export type RoutingPreviewSelectedRep = Pick<Rep, "id" | "name" | "email">;
+
+export type RoutingPreviewRepExclusionReason =
+  | "inactive"
+  | "outside_schedule"
+  | "unavailable";
+
+export type RoutingPreviewRep = RoutingPreviewSelectedRep & {
+  active: boolean;
+  scheduled: boolean;
+  unavailable: boolean;
+  eligible: boolean;
+  assignments: number;
+  weight: number;
+  selected: boolean;
+  exclusionReason: RoutingPreviewRepExclusionReason | null;
+};
+
+export type RoutingPreviewOutcome = "matched" | "no_match" | "no_eligible_rep";
+
+export type RoutingPreview = {
+  outcome: RoutingPreviewOutcome;
+  evaluatedAt: string;
+  selectedRule: RoutingPreviewSelectedRule | null;
+  selectedRep: RoutingPreviewSelectedRep | null;
+  reason: RouteReason | null;
+  rules: RoutingPreviewRule[];
+  reps: RoutingPreviewRep[];
 };

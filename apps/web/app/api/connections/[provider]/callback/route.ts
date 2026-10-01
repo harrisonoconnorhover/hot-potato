@@ -2,6 +2,7 @@ import { oauthStatesEqual } from "@hot-potato/integrations";
 import { type NextRequest, NextResponse } from "next/server";
 import {
   callbackUrl,
+  codeVerifierCookieName,
   connectionManager,
   connectionResultUrl,
   parseProvider,
@@ -21,10 +22,18 @@ export async function GET(
   const expectedState =
     request.cookies.get(stateCookieName(provider))?.value ?? "";
   const code = request.nextUrl.searchParams.get("code");
+  const codeVerifier = request.cookies.get(
+    codeVerifierCookieName(provider),
+  )?.value;
   const providerError = request.nextUrl.searchParams.get("error");
   let status = "connected";
 
-  if (!state || !expectedState || !oauthStatesEqual(state, expectedState)) {
+  if (
+    !state ||
+    !expectedState ||
+    !oauthStatesEqual(state, expectedState) ||
+    (provider === "microsoft" && !codeVerifier)
+  ) {
     status = "invalid-state";
   } else if (providerError || !code) {
     status = "denied";
@@ -33,7 +42,7 @@ export async function GET(
       await connectionManager().connect(
         process.env.HOT_POTATO_ORG ?? "acme",
         provider,
-        { code, redirectUri: callbackUrl(request, provider) },
+        { code, redirectUri: callbackUrl(request, provider), codeVerifier },
       );
     } catch (error) {
       console.error(
@@ -49,5 +58,6 @@ export async function GET(
     { status: 303 },
   );
   response.cookies.delete(stateCookieName(provider));
+  response.cookies.delete(codeVerifierCookieName(provider));
   return response;
 }

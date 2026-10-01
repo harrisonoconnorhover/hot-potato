@@ -11,7 +11,7 @@ services:
       timeout: 3s
       retries: 20
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - hot-potato-data:/var/lib/postgresql/data
 
@@ -26,15 +26,35 @@ services:
       postgres:
         condition: service_healthy
 
+  bootstrap:
+    build:
+      context: .
+      target: runner
+    command: ["npm", "run", "db:bootstrap"]
+    environment:
+      DATABASE_URL: postgres://hotpotato:hotpotato@postgres:5432/hotpotato
+      HOT_POTATO_ORG: ${HOT_POTATO_ORG:-acme}
+      HOT_POTATO_ORG_NAME: ${HOT_POTATO_ORG_NAME:-Hot Potato Workspace}
+      HOT_POTATO_ADMIN_USER: ${HOT_POTATO_ADMIN_USER:?Set HOT_POTATO_ADMIN_USER in .env}
+      HOT_POTATO_ADMIN_NAME: ${HOT_POTATO_ADMIN_NAME:-}
+      HOT_POTATO_ADMIN_PASSWORD: ${HOT_POTATO_ADMIN_PASSWORD:?Set HOT_POTATO_ADMIN_PASSWORD in .env}
+      HOT_POTATO_RESET_ADMIN_PASSWORD: ${HOT_POTATO_RESET_ADMIN_PASSWORD:-false}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   seed:
+    profiles: ["demo"]
     build:
       context: .
       target: runner
     command: ["npm", "run", "db:seed"]
     environment:
       DATABASE_URL: postgres://hotpotato:hotpotato@postgres:5432/hotpotato
+      HOT_POTATO_ORG: ${HOT_POTATO_ORG:-acme}
+      HOT_POTATO_ORG_NAME: ${HOT_POTATO_ORG_NAME:-Acme Revenue}
     depends_on:
-      migrate:
+      bootstrap:
         condition: service_completed_successfully
 
   web:
@@ -44,20 +64,24 @@ services:
     command: ["npm", "run", "start", "--workspace", "@hot-potato/web"]
     environment:
       DATABASE_URL: postgres://hotpotato:hotpotato@postgres:5432/hotpotato
-      HOT_POTATO_ORG: acme
+      HOT_POTATO_ORG: ${HOT_POTATO_ORG:-acme}
       PORT: 3000
       APP_URL: ${APP_URL:-http://localhost:3000}
+      TRUSTED_PROXY_CLIENT_IP_HEADER: ${TRUSTED_PROXY_CLIENT_IP_HEADER:-}
       OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:-}
-      CONNECTOR_SETUP_SECRET: ${CONNECTOR_SETUP_SECRET:-}
       HUBSPOT_CLIENT_ID: ${HUBSPOT_CLIENT_ID:-}
       HUBSPOT_CLIENT_SECRET: ${HUBSPOT_CLIENT_SECRET:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_WORKSPACE_ADDON_OAUTH_CLIENT_ID: ${GOOGLE_WORKSPACE_ADDON_OAUTH_CLIENT_ID:-}
+      GOOGLE_WORKSPACE_ADDON_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_WORKSPACE_ADDON_SERVICE_ACCOUNT_EMAIL:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
     depends_on:
-      seed:
+      bootstrap:
         condition: service_completed_successfully
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
 
   worker:
     build:
@@ -67,11 +91,23 @@ services:
     environment:
       DATABASE_URL: postgres://hotpotato:hotpotato@postgres:5432/hotpotato
       WORKER_POLL_MS: 1000
+      WORKER_OPERATION_TIMEOUT_MS: ${WORKER_OPERATION_TIMEOUT_MS:-120000}
+      APP_URL: ${APP_URL:-http://localhost:3000}
       OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:-}
       HUBSPOT_CLIENT_ID: ${HUBSPOT_CLIENT_ID:-}
       HUBSPOT_CLIENT_SECRET: ${HUBSPOT_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     depends_on:
-      seed:
+      bootstrap:
         condition: service_completed_successfully
 
 volumes:
