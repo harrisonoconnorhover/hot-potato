@@ -15,18 +15,23 @@ jobs:
       postgres:
         image: postgres:17-alpine
         env:
-          POSTGRES_DB: hotpotato
           POSTGRES_USER: hotpotato
           POSTGRES_PASSWORD: hotpotato
+          POSTGRES_DB: hotpotato_ci
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U hotpotato -d hotpotato"
-          --health-interval 3s
-          --health-timeout 3s
-          --health-retries 20
+          --health-cmd "pg_isready -U hotpotato -d hotpotato_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      DATABASE_URL: postgres://hotpotato:hotpotato@localhost:5432/hotpotato
+      DATABASE_URL: postgres://hotpotato:hotpotato@127.0.0.1:5432/hotpotato_ci
+      HOT_POTATO_ORG: acme
+      # Fictional owner for this disposable CI database only.
+      HOT_POTATO_ADMIN_USER: ci-owner
+      HOT_POTATO_ADMIN_PASSWORD: fixture-only-ci-password
+      NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,6 +42,11 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm test
-      - run: npm run db:setup
-      - run: npm run test:integration
       - run: npm run build
+      - run: npm run db:migrate
+      - run: npm run db:bootstrap
+      - run: npm run db:seed
+      - run: npm run test:integration
+      - run: npm run test:booking-integration
+        env:
+          HOT_POTATO_DISPOSABLE_DB: "1"

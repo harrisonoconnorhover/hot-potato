@@ -1,0 +1,30 @@
+{
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/gmail.addons.current.action.compose",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/script.locale"
+  ],
+  "addOns": {
+    "common": {
+      "name": "Hot Potato",
+      "logoUrl": "https://hot-potato.example/hot-potato-mascot.png",
+      "useLocaleFromApp": true
+    },
+    "gmail": {
+      "composeTrigger": {
+        "actions": [
+          {
+            "runFunction": "https://hot-potato.example/api/integrations/google-workspace-addon",
+            "label": "Insert scheduling options"
+          }
+        ],
+        "draftAccess": "NONE"
+      }
+    },
+    "httpOptions": {
+      "authorizationHeader": "SYSTEM_ID_TOKEN",
+      "granularOauthPermissionSupport": "OPT_IN"
+    }
+  }
+}

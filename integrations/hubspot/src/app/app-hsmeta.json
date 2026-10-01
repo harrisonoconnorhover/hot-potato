@@ -12,6 +12,7 @@
       ],
       "requiredScopes": [
         "oauth",
+        "crm.objects.contacts.read",
         "crm.objects.contacts.write",
         "crm.objects.owners.read"
       ],
@@ -24,7 +25,7 @@
       "img": []
     },
     "support": {
-      "supportEmail": "harrisonoconnorhoover@gmail.com",
+      "supportEmail": "support@example.com",
       "documentationUrl": "https://github.com/harrisonoconnorhover/hot-potato",
       "supportUrl": "https://github.com/harrisonoconnorhover/hot-potato/issues"
     }

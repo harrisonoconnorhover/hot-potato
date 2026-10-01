@@ -12,18 +12,21 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace @hot-potato/router && npm run build --workspace @hot-potato/db && npm run build --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/worker && npm run build --workspace @hot-potato/web",
+    "build": "npm run build --workspace @hot-potato/router && npm run build --workspace @hot-potato/email-composer && npm run build --workspace @hot-potato/db && npm run build --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/worker && npm run build --workspace @hot-potato/web",
     "dev": "npm run dev --workspace @hot-potato/web",
     "dev:worker": "npm run dev --workspace @hot-potato/worker",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspace @hot-potato/router && npm run test --workspace @hot-potato/integrations && npm run test --workspace @hot-potato/worker",
+    "test": "npm run test --workspace @hot-potato/router && npm run test --workspace @hot-potato/email-composer && npm run test --workspace @hot-potato/db && npm run test --workspace @hot-potato/integrations && npm run test --workspace @hot-potato/worker && npm run test --workspace @hot-potato/web",
     "test:integration": "npm run test:integration --workspace @hot-potato/db",
-    "typecheck": "npm run typecheck --workspace @hot-potato/router && npm run build --workspace @hot-potato/router && npm run typecheck --workspace @hot-potato/db && npm run build --workspace @hot-potato/db && npm run typecheck --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/integrations && npm run typecheck --workspace @hot-potato/worker && npm run typecheck --workspace @hot-potato/web",
+    "typecheck": "npm run typecheck --workspace @hot-potato/router && npm run build --workspace @hot-potato/router && npm run typecheck --workspace @hot-potato/email-composer && npm run build --workspace @hot-potato/email-composer && npm run typecheck --workspace @hot-potato/db && npm run build --workspace @hot-potato/db && npm run typecheck --workspace @hot-potato/integrations && npm run build --workspace @hot-potato/integrations && npm run typecheck --workspace @hot-potato/worker && npm run typecheck --workspace @hot-potato/web",
     "db:migrate": "npm run migrate --workspace @hot-potato/db",
+    "db:bootstrap": "npm run bootstrap --workspace @hot-potato/db",
     "db:seed": "npm run seed --workspace @hot-potato/db",
-    "db:setup": "npm run build --workspace @hot-potato/router && npm run build --workspace @hot-potato/db && npm run db:migrate && npm run db:seed"
+    "db:setup": "npm run build --workspace @hot-potato/router && npm run build --workspace @hot-potato/db && npm run db:migrate && npm run db:bootstrap",
+    "db:demo": "npm run db:setup && npm run db:seed",
+    "test:booking-integration": "npm run test:booking-integration --workspace @hot-potato/db"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",

@@ -7,3 +7,5 @@ coverage/
 *.log
 *.tsbuildinfo
 .DS_Store
+integrations/google-workspace/deployment.json
+integrations/outlook/manifest.generated.xml

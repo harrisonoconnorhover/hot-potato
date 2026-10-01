@@ -1,0 +1,462 @@
+.shell {
+  min-width: 0;
+  margin-bottom: 18px;
+  scroll-margin-top: 88px;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  border-radius: 12px;
+  background: #fffaf2;
+  box-shadow: 5px 6px 0 rgb(24 22 19 / 8%);
+}
+
+.heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 28px;
+  padding: 28px clamp(20px, 3.5vw, 42px);
+  background:
+    radial-gradient(circle at 91% 12%, rgb(215 239 104 / 28%), transparent 25%),
+    var(--ink);
+  color: #fff8ed;
+}
+
+.heading > div > span,
+.inviteForm > div > span,
+.accessReveal > span,
+.pending > div > span {
+  color: var(--acid);
+  font:
+    800 10px ui-monospace,
+    monospace;
+  letter-spacing: 0.1em;
+}
+
+.heading h2 {
+  margin: 9px 0 7px;
+  font-size: clamp(25px, 3vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.heading p {
+  max-width: 720px;
+  margin: 0;
+  color: #c9c0b5;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.heading dl {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin: 0;
+}
+
+.heading dl div {
+  min-width: 92px;
+  padding: 12px;
+  border: 1px solid #514a43;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+}
+
+.heading dt {
+  color: #aaa198;
+  font:
+    700 9px ui-monospace,
+    monospace;
+  text-transform: uppercase;
+}
+
+.heading dd {
+  margin: 5px 0 0;
+  color: var(--acid);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.inviteGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  border-bottom: 1px solid var(--line);
+}
+
+.inviteForm {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) repeat(3, minmax(120px, 0.8fr)) auto;
+  align-items: end;
+  gap: 12px;
+  padding: 20px clamp(20px, 3vw, 32px);
+}
+
+.inviteForm > div p,
+.accessReveal p,
+.pending > div p {
+  margin: 5px 0 0;
+  color: #81786d;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.inviteForm label {
+  display: grid;
+  gap: 6px;
+  color: #5f574e;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.inviteForm input,
+.inviteForm select,
+.tableWrap select {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #cbbdab;
+  border-radius: 6px;
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.inviteForm button,
+.accessReveal button,
+.accessReveal a,
+.rowActions button,
+.pending button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.inviteForm > button {
+  padding: 0 14px;
+  background: var(--fire);
+  box-shadow: 2px 2px 0 var(--ink);
+  white-space: nowrap;
+}
+
+.accessReveal {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px 24px;
+  border-left: 1px solid var(--line);
+  background: #f1f6df;
+}
+
+.accessReveal > span {
+  color: #647322;
+}
+
+.accessReveal strong {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.accessReveal code {
+  max-height: 52px;
+  margin-top: 7px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  color: #534d45;
+  font-size: 9px;
+}
+
+.accessReveal > div {
+  display: flex;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.accessReveal button,
+.accessReveal a {
+  flex: 1;
+  padding: 0 9px;
+  background: var(--acid);
+}
+
+.accessReveal small {
+  margin-top: 7px;
+  color: #8c2f15;
+  font-size: 9px;
+}
+
+.notice {
+  margin: 14px clamp(20px, 3vw, 32px) 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.notice.success {
+  border: 1px solid #91a644;
+  background: #f1f6df;
+  color: #4c5918;
+}
+
+.notice.error {
+  border: 1px solid #d76f52;
+  background: #fff0e8;
+  color: #8c2f15;
+}
+
+.tableWrap {
+  min-width: 0;
+  overflow-x: auto;
+  padding: 18px clamp(20px, 3vw, 32px) 22px;
+}
+
+.tableWrap table {
+  width: 100%;
+  min-width: 840px;
+  border-collapse: collapse;
+}
+
+.tableWrap th {
+  padding: 0 10px 9px;
+  color: #81786d;
+  font:
+    800 9px ui-monospace,
+    monospace;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.tableWrap td {
+  padding: 13px 10px;
+  border-top: 1px solid #ded3c4;
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+.tableWrap td strong,
+.tableWrap td small,
+.tableWrap td > span {
+  display: block;
+}
+
+.tableWrap td strong {
+  font-size: 12px;
+}
+
+.tableWrap td small {
+  margin-top: 3px;
+  color: #81786d;
+  font-size: 9px;
+}
+
+.tableWrap td > span:not(.activePill):not(.pausedPill) {
+  margin-top: 5px;
+  color: var(--fire-dark);
+  font:
+    800 8px ui-monospace,
+    monospace;
+  letter-spacing: 0.07em;
+}
+
+.inactive {
+  opacity: 0.66;
+  background: #f5efe6;
+}
+
+.providers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.providers span,
+.activePill,
+.pausedPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 7px;
+  border: 1px solid #cbbdab;
+  border-radius: 999px;
+  background: #f5efe6;
+  color: #746b60;
+  font:
+    750 8px ui-monospace,
+    monospace;
+}
+
+.providers .connected,
+.activePill {
+  border-color: #96a953;
+  background: #f1f6df;
+  color: #4c5918;
+}
+
+.pausedPill {
+  border-color: #d9a59b;
+  background: #fff0e9;
+  color: #743127;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.rowActions button,
+.pending button {
+  min-height: 32px;
+  padding: 0 9px;
+  background: #fffdf8;
+}
+
+.rowActions .danger {
+  border-color: #d9a59b;
+  color: #8c2f15;
+}
+
+.pending {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.35fr) minmax(0, 1.65fr);
+  gap: 20px;
+  padding: 20px clamp(20px, 3vw, 32px);
+  border-top: 1px solid var(--line);
+  background: #f5efe6;
+}
+
+.pending > div > span {
+  color: var(--fire-dark);
+}
+
+.pending ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pending li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d8ccbc;
+  border-radius: 7px;
+  background: #fffaf2;
+}
+
+.pending li strong,
+.pending li small {
+  display: block;
+}
+
+.pending li strong {
+  font-size: 11px;
+}
+
+.pending li small {
+  margin-top: 3px;
+  color: #81786d;
+  font-size: 9px;
+}
+
+/* The dashboard sidebar leaves less room than the viewport width suggests. */
+@media (max-width: 1400px) {
+  .inviteGrid,
+  .heading {
+    grid-template-columns: 1fr;
+  }
+
+  .inviteForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accessReveal {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .inviteForm,
+  .pending {
+    grid-template-columns: 1fr;
+  }
+
+  .heading dl {
+    align-items: stretch;
+  }
+
+  .heading dl div {
+    flex: 1;
+  }
+
+  .tableWrap {
+    overflow: visible;
+    padding: 16px 20px 20px;
+  }
+
+  .tableWrap table {
+    min-width: 0;
+  }
+
+  .tableWrap thead {
+    display: none;
+  }
+
+  .tableWrap tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .tableWrap tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px 12px;
+    padding: 14px;
+    border: 1px solid #d8ccbc;
+    border-radius: 8px;
+    background: #fffdf8;
+  }
+
+  .tableWrap td {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .tableWrap td:first-child,
+  .tableWrap td:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .tableWrap td[data-label]::before {
+    display: block;
+    margin-bottom: 7px;
+    color: #81786d;
+    content: attr(data-label);
+    font:
+      800 8px ui-monospace,
+      monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .tableWrap td:first-child::before {
+    display: none;
+  }
+
+  .tableWrap select,
+  .rowActions button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,340 @@
+.shell {
+  min-width: 0;
+  margin-bottom: 18px;
+  scroll-margin-top: 88px;
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 5px 6px 0 rgb(24 22 19 / 8%);
+}
+
+.intro {
+  position: relative;
+  min-width: 0;
+  padding: 30px clamp(20px, 3.5vw, 42px) 28px;
+  background:
+    radial-gradient(circle at 92% 12%, rgb(215 239 104 / 34%), transparent 26%),
+    var(--ink);
+  color: #fff8ed;
+}
+
+.ready .intro {
+  background:
+    radial-gradient(circle at 90% 15%, rgb(255 93 46 / 34%), transparent 29%),
+    var(--ink);
+}
+
+.eyebrow {
+  color: var(--acid);
+  font:
+    800 11px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.1em;
+}
+
+.intro h2 {
+  max-width: 720px;
+  margin: 12px 0 8px;
+  font-size: clamp(27px, 3vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.intro > p {
+  max-width: 690px;
+  margin: 0;
+  color: #c9c0b5;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.progressCopy {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.progressCopy span {
+  color: #f4ede3;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.progressCopy progress {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: #4b453e;
+  color: var(--fire);
+}
+
+.progressCopy progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: #4b453e;
+}
+
+.progressCopy progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--fire);
+}
+
+.progressCopy progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: var(--fire);
+}
+
+.primaryAction,
+.readyActions a,
+.readyActions button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.primaryAction {
+  gap: 18px;
+  margin-top: 22px;
+  padding: 0 16px;
+  background: var(--fire);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--acid);
+}
+
+.primaryAction:focus-visible,
+.readyActions a:focus-visible,
+.readyActions button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--acid);
+}
+
+.stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage {
+  min-width: 0;
+  min-height: 178px;
+  padding: 21px;
+  border-top: 1px solid var(--line);
+  background: #fbf6ee;
+}
+
+.stage + .stage {
+  border-left: 1px solid var(--line);
+}
+
+.stage.current {
+  background: #fff0e9;
+  box-shadow: inset 0 4px 0 var(--fire);
+}
+
+.stage.complete {
+  background: #f1f6df;
+}
+
+.stage.blocked {
+  color: #746b60;
+}
+
+.stageHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stageMark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: #fffaf2;
+  font:
+    850 12px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+
+.complete .stageMark {
+  background: var(--acid);
+  color: var(--ink);
+}
+
+.current .stageMark {
+  background: var(--fire);
+  color: var(--ink);
+}
+
+.stageStatus {
+  color: currentColor;
+  font:
+    800 10px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stage h3 {
+  margin: 17px 0 7px;
+  color: var(--ink);
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.stage p {
+  margin: 0;
+  color: currentColor;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.readyActions {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(420px, 1.3fr);
+  align-items: center;
+  gap: 20px;
+  padding: 20px clamp(20px, 3.5vw, 42px);
+  border-top: 1px solid var(--ink);
+  background: var(--acid);
+}
+
+.readyActions > div {
+  min-width: 0;
+}
+
+.readyActions > div > span,
+.readyActions > div > strong,
+.readyActions > div > code {
+  display: block;
+}
+
+.readyActions > div > span {
+  font:
+    800 10px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.readyActions > div > strong {
+  margin-top: 5px;
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.readyActions > div > code {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+
+.readyActions nav {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.readyActions a,
+.readyActions button {
+  min-width: 0;
+  padding: 8px 11px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+.readyActions button {
+  cursor: pointer;
+}
+
+.copyStatus {
+  min-height: 18px;
+  grid-column: 1 / -1;
+  margin: -8px 0 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 1080px) {
+  .stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stage:nth-child(3) {
+    border-left: 0;
+  }
+
+  .readyActions {
+    grid-template-columns: 1fr;
+  }
+
+  .readyActions nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .intro {
+    padding: 25px 19px 24px;
+  }
+
+  .stages {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stage {
+    min-height: 0;
+    padding: 18px 19px 20px;
+  }
+
+  .stage + .stage {
+    border-left: 0;
+  }
+
+  .primaryAction {
+    width: 100%;
+  }
+
+  .readyActions {
+    min-width: 0;
+    padding: 19px;
+  }
+
+  .readyActions nav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryAction,
+  .readyActions a,
+  .readyActions button {
+    transition: none;
+  }
+}

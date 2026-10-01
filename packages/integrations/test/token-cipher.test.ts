@@ -1,10 +1,10 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   TokenCipher,
+  createOAuthPkce,
   oauthStatesEqual,
   providerConfigured,
-  setupSecretMatches,
 } from "../src/index.js";
 
 describe("TokenCipher", () => {
@@ -30,33 +30,36 @@ describe("OAuth state comparison", () => {
   });
 });
 
+describe("OAuth PKCE", () => {
+  it("creates an S256 verifier and challenge pair", () => {
+    const pkce = createOAuthPkce();
+    expect(pkce.verifier.length).toBeGreaterThanOrEqual(43);
+    expect(pkce.challenge).toBe(
+      createHash("sha256").update(pkce.verifier).digest("base64url"),
+    );
+  });
+});
+
 describe("connector configuration", () => {
   const validKey = randomBytes(32).toString("base64");
   const baseEnvironment = {
     OAUTH_ENCRYPTION_KEY: validKey,
-    CONNECTOR_SETUP_SECRET: "a-long-local-setup-secret",
     HUBSPOT_CLIENT_ID: "hubspot-client",
     HUBSPOT_CLIENT_SECRET: "hubspot-secret",
+    MICROSOFT_CLIENT_ID: "microsoft-client",
+    MICROSOFT_CLIENT_SECRET: "microsoft-secret",
   };
 
-  it("accepts a complete provider configuration and its setup secret", () => {
+  it("accepts a complete provider configuration", () => {
     expect(providerConfigured("hubspot", baseEnvironment)).toBe(true);
-    expect(
-      setupSecretMatches("a-long-local-setup-secret", baseEnvironment),
-    ).toBe(true);
+    expect(providerConfigured("microsoft", baseEnvironment)).toBe(true);
   });
 
-  it("rejects malformed encryption keys and short setup secrets", () => {
+  it("rejects malformed encryption keys", () => {
     expect(
       providerConfigured("hubspot", {
         ...baseEnvironment,
         OAUTH_ENCRYPTION_KEY: "not-a-key",
-      }),
-    ).toBe(false);
-    expect(
-      providerConfigured("hubspot", {
-        ...baseEnvironment,
-        CONNECTOR_SETUP_SECRET: "short",
       }),
     ).toBe(false);
   });
